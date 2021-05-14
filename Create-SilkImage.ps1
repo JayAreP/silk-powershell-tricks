@@ -4,7 +4,9 @@ param(
     [parameter()]
     [string] $storage_container = 'silk',
     [parameter()]
-    [string] $imageFileName = 'k2c-cnode-8-0-21-10.vhd'
+    [string] $imageFileName = 'k2c-cnode-8-0-21-10.vhd',
+    [parameter(Mandatory)]
+    [string] $sasToken
 )
 
 $storage_accountname = 'images' + ( -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 10 | ForEach-Object {[char]$_})).ToLower()
@@ -19,7 +21,8 @@ $sc = $sa | New-AzStorageContainer -Name $storage_container
 # Generate storage contexts and 
 Write-Host -ForegroundColor yellow "Copying $imageFileName to $storage_accountname"
 $sakeys = $sa | Get-AzStorageAccountKey
-$srcContext = New-AzStorageContext -Anonymous -StorageAccountName silkimages
+
+$srcContext = New-AzStorageContext -StorageAccountName silkimages -SasToken $sasToken
 $dstContext = New-AzStorageContext -StorageAccountName $sa.StorageAccountName -StorageAccountKey $sakeys[0].Value
 Start-AzStorageBlobCopy -DestContainer $storage_container -SrcBlob $imageFileName -SrcContainer 'images' -DestContext $dstContext -Context $srcContext -DestBlob $imageFileName -Verbose 
 
